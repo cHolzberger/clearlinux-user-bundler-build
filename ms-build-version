@@ -1,0 +1,12 @@
+#!/usr/bin/env bash 
+set -euo pipefail
+
+MIX_BASE="/home/admin/clearlinux/mix"
+VERSION=$( cat "$MIX_BASE/mixversion" )
+TARGET=update/image/$VERSION
+#UPSTREAM_URL="/home/admin/clearlinux/mix/upstreamurl"
+UPSTREAM_URL="http://clr.ad.mosaiksoftware.de/3rdparty"
+
+sed -e "s|@VERSION@|${VERSION_ID}|" template.toml > repo.toml
+sed -i "s|@TESTDIR@|file:///${PWD}/s/www/update|" repo.toml
+

@@ -1,0 +1,44 @@
+#!/bin/bash 
+# Author : Hemanth.HM
+# Email : hemanth[dot]hm[at]gmail[dot]com
+# License : GNU GPLv3
+#
+set -euo pipefail
+
+function useage()
+
+{
+
+    cat << EOU
+Useage: bash $0 <path to the binary> <path to copy the dependencies>
+EOU
+exit 1
+}
+
+#Validate the inputs
+[[ $# < 2 ]] && useage
+
+#Check if the paths are vaild
+[[ ! -e $1 ]] && echo "Not a vaild input $1" && exit 1 
+[[ -d $2 ]] || echo "No such directory $2 creating..."&& mkdir -p "$2"
+
+
+[[ $( file "$1" --mime-type  -b) == "application/x-executable" ]] || exit 0
+
+ldd "$1" 1>/dev/null ||  exit 0
+#Get the library dependencies
+echo "Collecting the shared library dependencies for $1..."
+deps=( $( ldd "$1" | grep "=>" | cut -d">" -f2 | cut -d"(" -f 1 | grep "lib64" | grep -v "ld-linux" | xargs "echo" ))
+
+echo "Copying the dependencies to $2"
+
+#Copy the deps
+for dep in ${deps[@]}
+do
+    echo "Copying $dep to $2"
+    bd=$(dirname $dep)
+    [[ ! -d "$2/$bd" ]] && echo "Creating $2/$bd" && mkdir -p "$2/$bd"
+    cp -a "$dep" "$2/$dep" ||  exit 1
+done
+
+echo "Done!"

@@ -1,0 +1,10 @@
+[upstream]
+url = "@UPSTREAM_URL@"
+version = @VERSION@
+
+[bundle]
+name = "@BUNDLE_NAME@"
+description = "@BUNDLE_DESCRIPTION@"
+includes = [ "os-core", "os-core-update" ]
+url = "@REPO_URL@"
+bin = [ @BIN_FILES@ ]

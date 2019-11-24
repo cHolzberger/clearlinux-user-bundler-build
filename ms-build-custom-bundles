@@ -1,0 +1,66 @@
+#!/usr/bin/env bash 
+set -euo pipefail
+set -o allexport 
+
+source ./clr-build-version
+
+function run_copy_opt() {
+	echo "Copying Optional Package $1"
+	copy_opt ${@} 
+	copy_libs ${@} 
+}
+
+function copy_libs() {
+_B=$1
+_S=/opt/$_B
+_T=$TARGET/ms-$_B/$_S
+_R=$TARGET/ms-$_B
+
+if [[ -d $_S/bin ]]; then
+	echo "Coping shared libraries"
+	for i in $_S/bin/*; do
+		./ms-copy-shared $i $_R
+	done
+fi
+
+}
+
+function copy_opt () {
+_B=$1
+_S=/opt/$_B
+_T=$TARGET/ms-$_B/$_S
+_R=$TARGET/ms-$_B
+
+echo "Checking Source"
+if [[ ! -d "$_S" ]]; then
+	echo "Source $_S does not exist ... quitting"
+	exit 1
+fi
+
+echo "Checking groups.ini"
+if ! grep "^\[ms-$_B\]$" >/dev/null update/groups.ini; then 
+	echo "$_B not in update/groups.ini ... adding it"
+	cat <<-EOF>> update/groups.ini
+	[ms-$_B]
+	group=ms-$_B
+	EOF
+fi
+
+echo "Checking target"
+if [[ ! -d  $_T ]]; then
+	echo "$_T does not exist ... creating it"
+	mkdir -p $_T
+fi
+
+echo "Copy $_S to $_T"
+rsync -ar $_S/* $_T/ 
+
+}
+
+OPT=(podman lxd vpp pwsh dotnet hashicorp)
+
+echo "Copying Components: $OPT"
+for i in ${OPT[@]}; do
+run_copy_opt $i | sed -e "s/^/ [$i] /g" 
+done
+echo Done
